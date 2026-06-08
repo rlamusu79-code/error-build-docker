@@ -1,0 +1,88 @@
+~ $ aws iam create-service-linked-role --aws-service-name ecs.amazonaws.com
+
+aws: [ERROR]: An error occurred (InvalidInput) when calling the CreateServiceLinkedRole operation: Service role name AWSServiceRoleForECS has been taken in this account, please try a different suffix.
+~ $ aws iam get-role --role-name AWSServiceRoleForECS
+{
+    "Role": {
+        "Path": "/aws-service-role/ecs.amazonaws.com/",
+        "RoleName": "AWSServiceRoleForECS",
+        "RoleId": "AROAS24FFCFLYWBIFEEXJ",
+        "Arn": "arn:aws:iam::195163394391:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS",
+        "CreateDate": "2026-06-08T04:35:17+00:00",
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "ecs.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                }
+            ]
+        },
+        "Description": "Policy to enable Amazon ECS to manage your EC2 instances and related resources.",
+        "MaxSessionDuration": 3600,
+        "RoleLastUsed": {}
+    }
+}
+~ $ aws ecs create-cluster --cluster-name lks2026-cluster --region us-east-1
+{
+    "cluster": {
+        "clusterArn": "arn:aws:ecs:us-east-1:195163394391:cluster/lks2026-cluster",
+        "clusterName": "lks2026-cluster",
+        "status": "ACTIVE",
+        "registeredContainerInstancesCount": 0,
+        "runningTasksCount": 0,
+        "pendingTasksCount": 0,
+        "activeServicesCount": 0,
+        "statistics": [],
+        "tags": [],
+        "settings": [
+            {
+                "name": "containerInsights",
+                "value": "disabled"
+            }
+        ],
+        "capacityProviders": [],
+        "defaultCapacityProviderStrategy": []
+    }
+}
+~ $ aws ecs list-clusters --region us-east-1
+{
+    "clusterArns": [
+        "arn:aws:ecs:us-east-1:195163394391:cluster/lks2026-cluster"
+    ]
+}
+~ $ aws iam list-attached-role-policies --role-name AWSServiceRoleForECS
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "AmazonECSServiceRolePolicy",
+            "PolicyArn": "arn:aws:iam::aws:policy/aws-service-role/AmazonECSServiceRolePolicy"
+        }
+    ]
+}
+~ $ aws ecs create-cluster --cluster-name lks2026-cluster --region us-east-1
+{
+    "cluster": {
+        "clusterArn": "arn:aws:ecs:us-east-1:195163394391:cluster/lks2026-cluster",
+        "clusterName": "lks2026-cluster",
+        "status": "ACTIVE",
+        "registeredContainerInstancesCount": 0,
+        "runningTasksCount": 0,
+        "pendingTasksCount": 0,
+        "activeServicesCount": 0,
+        "statistics": [],
+        "tags": [],
+        "settings": [
+            {
+                "name": "containerInsights",
+                "value": "disabled"
+            }
+        ],
+        "capacityProviders": [],
+        "defaultCapacityProviderStrategy": []
+    }
+}
+~ $
