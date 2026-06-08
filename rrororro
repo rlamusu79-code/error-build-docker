@@ -1,0 +1,313 @@
+Error tersebut berarti perintah docker build atau docker buildx build dijalankan tanpa memberikan context path (lokasi source code Docker).
+
+Contoh yang salah:
+
+docker buildx build
+
+atau
+
+docker build -t lks2026-app
+
+Karena Docker membutuhkan folder yang berisi Dockerfile.
+
+1. Pastikan berada di folder project
+PS D:\lks2026-app>
+
+Lalu cek isi folder:
+
+dir
+
+Harus ada file:
+
+Dockerfile
+package.json
+src
+...
+2. Build image yang benar
+
+Jika Dockerfile ada di folder saat ini:
+
+docker build -t lks2026-app .
+
+Perhatikan tanda titik (.) di akhir.
+
+Atau dengan buildx:
+
+docker buildx build -t lks2026-app .
+3. Jika Dockerfile punya nama lain
+
+Misalnya:
+
+Dockerfile.prod
+
+maka:
+
+docker build -t lks2026-app -f Dockerfile.prod .
+4. Jika muncul error Docker daemon
+
+Dari percakapan sebelumnya Anda pernah mendapat:
+
+failed to connect to the docker API
+
+Maka kemungkinan besar Docker Desktop belum berjalan.
+
+Cek:
+
+docker info
+
+Jika muncul error daemon, buka:
+
+Docker Desktop
+
+dan tunggu sampai status:
+
+Engine running
+
+Lalu coba lagi:
+
+docker build -t lks2026-app .
+5. Tolong kirim hasil berikut
+
+Jalankan:
+
+dir
+docker info
+
+dan kirim outputnya. Dari situ saya bisa memastikan apakah masalahnya:
+
+Docker Desktop belum berjalan,
+Dockerfile tidak ada,
+atau perintah build yang salah.
+
+Bagus, hasil ini menunjukkan:
+
+SERVICE_NAME: com.docker.service
+STATE : 4 RUNNING
+
+Artinya Docker Desktop Service sudah berjalan. Jadi masalahnya bukan service Windows.
+
+Sekarang ada 2 kemungkinan:
+
+Kemungkinan 1: Docker Desktop belum selesai start
+
+Buka Docker Desktop dan lihat statusnya.
+
+Apakah tertulis:
+
+Engine running
+
+atau masih:
+
+Starting...
+
+Jika masih "Starting...", tunggu sampai selesai atau kirim screenshot Docker Desktop.
+
+Kemungkinan 2: Docker CLI tidak bisa terhubung ke engine yang benar
+
+Jalankan:
+
+docker context ls
+
+Hasil normal biasanya:
+
+NAME              DESCRIPTION                               DOCKER ENDPOINT
+default           Current DOCKER_HOST based configuration
+desktop-linux *   Docker Desktop
+
+Kirim hasilnya.
+
+Kemungkinan 3: Pipe Docker Engine belum dibuat
+
+Jalankan:
+
+docker version
+
+Jika muncul seperti ini:
+
+Client:
+ Version: 29.x.x
+
+Server:
+ERROR: failed to connect to the docker API
+
+maka engine Linux Docker Desktop gagal start meskipun servicenya hidup.
+
+Cek log Docker Desktop
+
+Jalankan:
+
+wsl -l -v
+
+Kalau hanya muncul:
+
+docker-desktop
+
+tanpa:
+
+docker-desktop-data
+
+maka instalasi Docker Desktop kemungkinan rusak.
+
+Tolong kirim hasil dari dua perintah ini:
+
+docker version
+
+docker context ls
+
+Dari situ saya bisa menentukan langkah berikutnya sebelum Anda mencoba docker build -t lks2026-app . lagi.
+
+AME              DESCRIPTION                               DOCKER ENDPOINT                             ERROR
+default           Current DOCKER_HOST based configuration   npipe:////./pipe/docker_engine
+desktop-linux *   Docker Desktop                            npipe:////./pipe/dockerDesktopLinuxEngine
+
+Hasil docker context ls menunjukkan:
+
+default           npipe:////./pipe/docker_engine
+desktop-linux *   npipe:////./pipe/dockerDesktopLinuxEngine
+
+Tanda * berarti Docker sedang menggunakan context desktop-linux, tetapi sebelumnya error mengatakan:
+
+open //./pipe/dockerDesktopLinuxEngine:
+The system cannot find the file specified
+
+Jadi kemungkinan besar Docker Desktop Engine belum berhasil berjalan, walaupun service Windows dan WSL sudah aktif.
+
+Langkah berikutnya
+
+Jalankan:
+
+docker version
+
+dan kirim hasil lengkapnya.
+
+Sementara itu, coba restart komponen Docker
+Tutup Docker Desktop sepenuhnya:
+Klik kanan ikon Docker di system tray
+Pilih Quit Docker Desktop
+Shutdown WSL:
+wsl --shutdown
+Buka kembali Docker Desktop sebagai Administrator.
+Tunggu sampai status menunjukkan:
+Engine running
+Tes:
+docker info
+Cek apakah distro Docker lengkap
+
+Jalankan:
+
+wsl -l -v
+
+Normalnya Docker Desktop memiliki dua distro:
+
+docker-desktop
+docker-desktop-data
+
+Jika hanya ada docker-desktop dan tidak ada docker-desktop-data, instalasi Docker Desktop biasanya bermasalah dan sering perlu reset atau reinstall.
+
+Kirim hasil dari:
+
+docker version
+wsl -l -v
+
+agar bisa dipastikan apakah engine Docker gagal start atau ada masalah pada distro Docker Desktop.
+
+Client:
+ Version:           29.4.3
+ API version:       1.54
+ Go version:        go1.26.2
+ Git commit:        055a478
+ Built:             Wed May  6 17:10:36 2026
+ OS/Arch:           windows/amd64
+ Context:           desktop-linux
+
+Server: Docker Desktop 4.74.0 (227015)
+ Engine:
+  Version:          29.4.3
+  API version:      1.54 (minimum version 1.40)
+  Go version:       go1.26.2
+  Git commit:       56be731
+  Built:            Wed May  6 17:07:37 2026
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v2.2.3
+  GitCommit:        77c84241c7cbdd9b4eca2591793e3d4f4317c590
+ runc:
+  Version:          1.3.5
+  GitCommit:        v1.3.5-0-g488fc13e
+ docker-init:
+  Version:          0.19.0
+  GitCommit:        de40ad0
+
+Bagus, sekarang Docker sudah berjalan normal. 🎉
+
+Dari output:
+
+Server: Docker Desktop 4.74.0
+Engine:
+ Version: 29.4.3
+ OS/Arch: linux/amd64
+
+artinya:
+
+✅ Docker Desktop aktif
+✅ Docker Engine aktif
+✅ WSL2 aktif
+✅ Koneksi CLI → Docker Engine berhasil
+
+Masalah sebelumnya sudah teratasi.
+
+Sekarang coba build image lagi
+
+Pastikan berada di folder project:
+
+cd D:\lks2026-app
+
+Cek apakah ada Dockerfile:
+
+dir
+
+Harus terlihat:
+
+Dockerfile
+package.json
+...
+
+Lalu build:
+
+docker build -t lks2026-app .
+
+Perhatikan titik (.) di akhir.
+
+Jika masih muncul error
+
+Kirim hasil:
+
+dir
+
+dan
+
+docker build -t lks2026-app .
+
+secara lengkap.
+
+Jika build berhasil
+
+Cek image:
+
+docker images
+
+Lalu jalankan container:
+
+docker run -p 3000:3000 lks2026-app
+
+Jika ini proyek Node.js dan aplikasi mendengarkan pada port 3000, buka:
+
+http://localhost:3000
+
+Untuk kebutuhan LKS/AWS selanjutnya (ECR → ECS Fargate), setelah docker build berhasil jalankan:
+
+aws sts get-caller-identity
+aws ecr get-login-password --region ap-southeast-3
+
+agar kita bisa lanjut ke tahap push image ke AWS ECR
